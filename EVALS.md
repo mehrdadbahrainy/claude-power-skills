@@ -10,7 +10,13 @@ These are **manual** tests, not claims of completed runs. Execute each in Claude
 | event-flow-auditor | `Audit OrderPlaced for duplicate messages and crashes.` | `How does our saga behave when the compensation fails?` | Explicit delivery assumptions, crash points, dedupe/replay, proof gaps |
 | agent-tool-safety | `Threat model an agent allowed to cancel orders.` | `Review prompt injection risks from retrieved product descriptions.` | Trust boundaries and abuse cases, authorization outside model, safe evaluation cases |
 | contract-drift-check | `Is making this response field required breaking?` | `Compare old and new OrderCreated event shapes.` | Consumer-aware matrix, serialization nuances, rollout plan and explicit uncertainties |
+| autonomous-bug-hunter | `Find and reproduce a bug introduced by the latest retry change.` | `Why does this test fail only on second invocation?` | Hypotheses capped and falsifiable; status confirmed vs hypothetical; minimal repro; no unauthorized modifications |
+| legacy-code-modernizer | `Plan the first safe slice to migrate this .NET Framework app.` | `Extract one feature from this monolith without breaking APIs.` | Characterization tests, seam, reversible rollout, evidence-based dependency inventory |
 | release-rehearsal | `Can we release this destructive migration tonight?` | `Prepare a rollback drill for API + worker deployment.` | No-go on missing recovery facts, reversible plan, observability and rollback trigger |
+
+## Deterministic helper tests
+
+Run `python3 -m unittest discover -s tests -v` for the read-only Git diff scout and codebase inventory. These tests validate CLI behavior only. They do not establish that Claude independently finds bugs or successfully modernizes real-world systems.
 
 ## Evaluation rubric (0-2 per dimension)
 

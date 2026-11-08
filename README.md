@@ -1,6 +1,6 @@
 # Claude Power Skills
 
-**Seven evidence-driven, practical skills for Claude Code** — designed for people shipping real software, not for generating generic advice.
+**Nine evidence-driven, practical skills for Claude Code** — designed for people shipping real software, not for generating generic advice.
 
 [فارسی](#راهنمای-سریع-فارسی) · [Skills](#skill-catalog) · [Install](#installation) · [Evaluation](#quality-and-evaluation)
 
@@ -19,6 +19,8 @@ Each skill requires Claude to inspect relevant files before drawing conclusions,
 | `/agent-tool-safety` | Agents that retrieve data or invoke tools | Trust-boundary map, attack cases, guardrails, evaluation cases |
 | `/contract-drift-check` | REST/event schema changes | Compatibility matrix, consumer impact, rollout plan |
 | `/release-rehearsal` | Before a risky production release | Go/no-go checks, rollback and verification playbook |
+| `/autonomous-bug-hunter` | Bug reproduction and narrow regression fixes | Hypothesis loop, local diff scout, reproducible test |
+| `/legacy-code-modernizer` | Incremental modernization of existing systems | Read-only code inventory, preservation contract, thin migration slice |
 
 All skill prompts are written in English for portability. They work with any repository; several contain .NET/EF Core and event-driven examples.
 
@@ -56,9 +58,11 @@ Copy the folders from `.claude/skills/` into `<your-project>/.claude/skills/`. K
 /agent-tool-safety Threat-model the product-search and order-creation agent tools.
 /contract-drift-check Compare our proposed DTO/event changes to the current main branch.
 /release-rehearsal Prepare a release plan for this migration and API rollout.
+/autonomous-bug-hunter Reproduce a regression introduced by my latest change.
+/legacy-code-modernizer Plan a safe first slice for migrating this legacy .NET application.
 ```
 
-Claude may also select a skill automatically if your request matches its description. Use `/skill-name` to invoke a specific workflow. No extra packages, MCP servers, secrets, or hooks are required by these skills.
+Claude may also select a skill automatically if your request matches its description. Use `/skill-name` to invoke a specific workflow. No extra packages, MCP servers, secrets, or hooks are required by these skills. Two skills include optional Python 3 standard-library helpers; the bug scout additionally requires a local Git executable.
 
 ## Operating principles
 
@@ -74,13 +78,20 @@ Run the dependency-free structural validator:
 
 ```bash
 python3 scripts/validate_skills.py
+python3 -m unittest discover -s tests -v
 ```
 
 Read [EVALS.md](EVALS.md) for scenario prompts and success criteria. The CI workflow validates structure, **not** model behavior: you still need to run scenario evaluations with Claude Code on representative projects.
 
+## New in v0.2: executable, read-only helpers
+
+- `/autonomous-bug-hunter` can run `python3 .claude/skills/autonomous-bug-hunter/scripts/change_risk_scan.py --repo . --base HEAD` to prioritize changed lines for manual review. It does not run the application or prove bugs.
+- `/legacy-code-modernizer` can run `python3 .claude/skills/legacy-code-modernizer/scripts/codebase_inventory.py --root .` to inventory project files, language mix and target frameworks. It does not upgrade code.
+- Deterministic helper tests run in GitHub Actions, separate from the manual Claude Code evaluations in EVALS.md.
+
 ## راهنمای سریع فارسی
 
-این مخزن شامل ۷ مهارت برای Claude Code است که برای بررسی معماری، تحلیل ریسک تغییرات، بهبود کارایی SQL و EF Core، بررسی سیستم‌های مبتنی بر پیام، امنیت Agentها، سازگاری API و آمادگی انتشار ساخته شده‌اند. هر Skill یک فایل `SKILL.md` دارد و با دستور `/<name>` اجرا می‌شود. برای نصب سراسری، پوشه‌های داخل `.claude/skills/` را در `~/.claude/skills/` کپی کنید.
+این مخزن شامل ۹ مهارت برای Claude Code است که برای بررسی معماری، تحلیل ریسک تغییرات، بهبود کارایی SQL و EF Core، بررسی سیستم‌های مبتنی بر پیام، امنیت Agentها، سازگاری API و آمادگی انتشار ساخته شده‌اند. هر Skill یک فایل `SKILL.md` دارد و با دستور `/<name>` اجرا می‌شود. برای نصب سراسری، پوشه‌های داخل `.claude/skills/` را در `~/.claude/skills/` کپی کنید.
 
 ## Reference
 
