@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+import re
 import sys
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -19,19 +20,34 @@ LANGUAGES = {
     ".js": "JavaScript", ".jsx": "JavaScript",
     ".ts": "TypeScript", ".tsx": "TypeScript",
     ".go": "Go", ".rs": "Rust", ".php": "PHP", ".rb": "Ruby",
+    ".aspx": "ASP.NET WebForms", ".ascx": "ASP.NET WebForms", ".asmx": "ASP.NET WebForms",
+    ".cshtml": "Razor", ".vbhtml": "Razor", ".sql": "SQL",
 }
 PROJECT_EXTS = {".csproj", ".vbproj", ".fsproj"}
 BUILD_FILES = {
     "package.json", "pom.xml", "build.gradle", "build.gradle.kts",
     "requirements.txt", "pyproject.toml", "go.mod", "Cargo.toml",
     "Dockerfile", "docker-compose.yml", "compose.yml",
+    "global.json", "directory.build.props", "directory.packages.props", "nuget.config",
 }
+# Files that usually indicate classic .NET Framework-era technology (matched case-insensitively).
+LEGACY_MARKER_NAMES = {"packages.config", "web.config", "app.config", "global.asax"}
+LEGACY_MARKER_EXTS = {".edmx": "Entity Framework EDMX model", ".svc": "WCF service endpoint"}
+BUILD_FILES_LOWER = {name.lower() for name in BUILD_FILES}
+TEST_DIR = re.compile(r"((^|[._\-]|unit|integration|functional|acceptance)tests?|__tests__)$", re.I)
 
 
 def project_info(path, root):
-    result = {"path": path.relative_to(root).as_posix(), "target_frameworks": [], "project_references": 0}
+    result = {
+        "path": path.relative_to(root).as_posix(),
+        "sdk_style": False,
+        "target_frameworks": [],
+        "project_references": 0,
+        "package_references": 0,
+    }
     try:
         tree = ET.parse(path)
+        result["sdk_style"] = "Sdk" in tree.getroot().attrib
         for element in tree.iter():
             tag = element.tag.rsplit("}", 1)[-1]
             if tag in ("TargetFramework", "TargetFrameworks", "TargetFrameworkVersion"):
@@ -41,6 +57,8 @@ def project_info(path, root):
                         result["target_frameworks"].append(value)
             elif tag == "ProjectReference":
                 result["project_references"] += 1
+            elif tag == "PackageReference":
+                result["package_references"] += 1
     except (ET.ParseError, OSError, UnicodeError) as exc:
         result["parse_warning"] = type(exc).__name__
     return result
@@ -53,6 +71,7 @@ def inventory(root, limit):
     files_seen = 0
     truncated = False
     test_like = 0
+    legacy = defaultdict(list)
     for current, dirs, files in os.walk(root):
         dirs[:] = sorted(d for d in dirs if d not in SKIP_DIRS and not (Path(current) / d).is_symlink())
         for filename in sorted(files):
@@ -71,9 +90,14 @@ def inventory(root, limit):
                 counts[LANGUAGES[suffix]] += 1
             if suffix in PROJECT_EXTS and len(projects) < 200:
                 projects.append(project_info(path, root))
-            if (filename in BUILD_FILES or suffix in {".sln", ".slnx"}) and len(manifests) < 200:
+            lower = filename.lower()
+            if (lower in BUILD_FILES_LOWER or suffix in {".sln", ".slnx"}) and len(manifests) < 200:
                 manifests.append(rel.as_posix())
-            if any(p.lower() in {"test", "tests", "__tests__"} or p.lower().endswith("tests") for p in rel.parts[:-1]):
+            if lower in LEGACY_MARKER_NAMES:
+                legacy[lower].append(rel.as_posix())
+            elif suffix in LEGACY_MARKER_EXTS:
+                legacy[LEGACY_MARKER_EXTS[suffix]].append(rel.as_posix())
+            if any(TEST_DIR.search(p) for p in rel.parts[:-1]):
                 test_like += 1
         if truncated:
             break
@@ -86,7 +110,12 @@ def inventory(root, limit):
         "project_files": projects,
         "build_manifests": sorted(manifests),
         "files_in_test_named_directories": test_like,
+        "legacy_markers": {
+            name: {"count": len(paths), "examples": sorted(paths)[:10]}
+            for name, paths in sorted(legacy.items())
+        },
         "limitations": [
+            "Legacy markers are file-name signals; a web.config or packages.config can also exist in a modernized app.",
             "File counts and names do not establish software quality or runtime behavior.",
             "Target framework values may be imported or computed from external MSBuild properties.",
             "Test counts are directory-name heuristics, not proof of coverage.",

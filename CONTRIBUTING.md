@@ -8,7 +8,9 @@ Add skills that turn a recurring engineering task into a repeatable, testable wo
 - Provide standards-compliant YAML frontmatter with `name` matching its folder and a specific `description` saying **what** it does and **when** to invoke it.
 - State inputs, a bounded workflow, evidence requirements, output format, and what to do if tools/files are unavailable.
 - Distinguish observation, hypothesis, and recommendation. Avoid unjustified confidence and auto-destructive actions.
-- Use relative links for optional `references/` and keep main files focused.
+- Include `license: MIT`, and keep frontmatter to the portable Agent Skills keys (`name`, `description`, `license`, `compatibility`, `metadata`, `allowed-tools`) so skills can also be uploaded to claude.ai.
+- Use relative links for optional `references/`, `assets/` and `scripts/`, and keep main files focused.
+- Reference bundled scripts as `${CLAUDE_SKILL_DIR}/scripts/<file>`, never `.claude/skills/<name>/...`, so personal installs work; pre-approve only that script in `allowed-tools`.
 - Include at least two realistic evaluation prompts and expected outcomes in `EVALS.md`.
 - Run `python3 scripts/validate_skills.py` and, where possible, exercise the skill on a representative repository.
 - Don't add secrets, private code, tokens, internal endpoints, or production data to fixtures.
