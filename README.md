@@ -83,15 +83,35 @@ python3 -m unittest discover -s tests -v
 
 Read [EVALS.md](EVALS.md) for scenario prompts and success criteria. The CI workflow validates structure, **not** model behavior: you still need to run scenario evaluations with Claude Code on representative projects.
 
-## New in v0.2: executable, read-only helpers
+## Executable, read-only helpers
 
-- `/autonomous-bug-hunter` can run `python3 .claude/skills/autonomous-bug-hunter/scripts/change_risk_scan.py --repo . --base HEAD` to prioritize changed lines for manual review. It does not run the application or prove bugs.
-- `/legacy-code-modernizer` can run `python3 .claude/skills/legacy-code-modernizer/scripts/codebase_inventory.py --root .` to inventory project files, language mix and target frameworks. It does not upgrade code.
-- Deterministic helper tests run in GitHub Actions, separate from the manual Claude Code evaluations in EVALS.md.
+Two skills bundle Python 3 standard-library helpers. Skills reference them through `${CLAUDE_SKILL_DIR}`, which Claude Code expands to the skill's own folder, so the helpers work for both personal (`~/.claude/skills`) and per-project installs. Each skill's `allowed-tools` pre-approves only its own helper.
+
+- `/autonomous-bug-hunter` runs `python3 ${CLAUDE_SKILL_DIR}/scripts/change_risk_scan.py --repo . --base HEAD` to prioritize changed lines for manual review — including deleted files and removed authorization/transaction code. `--base` is resolved to a commit SHA before use, so option-like values are rejected. It does not run the application or prove bugs.
+- `/legacy-code-modernizer` runs `python3 ${CLAUDE_SKILL_DIR}/scripts/codebase_inventory.py --root .` to inventory project files, language mix, target frameworks, SDK-style vs classic projects, package references and legacy .NET markers (`packages.config`, `web.config`, WebForms, EDMX, WCF). It does not upgrade code.
+- Deterministic helper tests run in GitHub Actions on Linux, Windows and macOS, separate from the manual Claude Code evaluations in EVALS.md.
+
+See [CHANGELOG.md](CHANGELOG.md) for release notes.
 
 ## راهنمای سریع فارسی
 
-این مخزن شامل ۹ مهارت برای Claude Code است که برای بررسی معماری، تحلیل ریسک تغییرات، بهبود کارایی SQL و EF Core، بررسی سیستم‌های مبتنی بر پیام، امنیت Agentها، سازگاری API و آمادگی انتشار ساخته شده‌اند. هر Skill یک فایل `SKILL.md` دارد و با دستور `/<name>` اجرا می‌شود. برای نصب سراسری، پوشه‌های داخل `.claude/skills/` را در `~/.claude/skills/` کپی کنید.
+این مخزن شامل ۹ مهارت (Skill) برای Claude Code است. هر Skill یک فایل `SKILL.md` دارد و با دستور `/<name>` اجرا می‌شود؛ Claude هم اگر درخواست شما با توضیح یک Skill جور باشد، خودش آن را انتخاب می‌کند.
+
+| دستور | کاربرد |
+| --- | --- |
+| `/architecture-xray` | نقشه‌ی معماری واقعی سیستم با ارجاع به فایل‌ها |
+| `/failure-mode-review` | بررسی یک diff قبل از merge با سناریوهای خرابی مشخص |
+| `/query-performance-detective` | عیب‌یابی کندی SQL و EF Core بر پایه‌ی اندازه‌گیری |
+| `/event-flow-auditor` | بررسی صف‌ها، Outbox، Saga، تکرار و idempotency |
+| `/agent-tool-safety` | مدل‌سازی تهدید برای Agentهایی که ابزار صدا می‌زنند |
+| `/contract-drift-check` | سازگاری قرارداد API و رویدادها بین نسخه‌ها |
+| `/release-rehearsal` | آمادگی انتشار، تصمیم go/no-go و برنامه‌ی بازگشت |
+| `/autonomous-bug-hunter` | بازتولید و اصلاح یک باگ مشخص با تست حداقلی |
+| `/legacy-code-modernizer` | مدرن‌سازی تدریجی و کم‌ریسک کد قدیمی |
+
+**نصب سراسری:** پوشه‌های داخل `.claude/skills/` را در `~/.claude/skills/` کپی کنید. اسکریپت‌های کمکی با `${CLAUDE_SKILL_DIR}` آدرس‌دهی شده‌اند و در هر دو حالت نصب (سراسری یا داخل یک پروژه) کار می‌کنند.
+
+**بررسی ساختار:** `python3 scripts/validate_skills.py` و `python3 -m unittest discover -s tests -v`. این‌ها فقط ساختار را می‌سنجند، نه کیفیت پاسخ مدل؛ برای آن [EVALS.md](EVALS.md) را ببینید.
 
 ## Reference
 

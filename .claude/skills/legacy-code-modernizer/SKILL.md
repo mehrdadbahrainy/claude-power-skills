@@ -1,6 +1,8 @@
 ---
 name: legacy-code-modernizer
 description: Plan and implement low-risk, incremental modernization of legacy codebases. Use when asked to migrate old .NET apps, split monoliths, update frameworks, or replace old architecture safely.
+license: MIT
+allowed-tools: Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/codebase_inventory.py *)
 ---
 
 # Legacy Code Modernizer
@@ -16,8 +18,8 @@ Modernize a **small vertical slice with protected behavior**. Prefer a strangler
 ## Workflow
 
 1. Inventory code, project files, target frameworks, dependencies, test locations and build entry points. Optionally run:
-   `python3 .claude/skills/legacy-code-modernizer/scripts/codebase_inventory.py --root .`
-   This tool makes a local file inventory; project metadata can be inherited or computed, so verify findings against build files and docs.
+   `python3 ${CLAUDE_SKILL_DIR}/scripts/codebase_inventory.py --root .`
+   (`${CLAUDE_SKILL_DIR}` is this skill's folder; if your client does not expand it, use the `scripts/` folder next to this file.) This tool makes a local file inventory, including legacy .NET signals such as `packages.config`, `web.config`/`app.config` and WebForms pages; project metadata can be inherited or computed, so verify findings against build files and docs.
 2. Map actual dependencies and runtime behavior with source evidence. Identify one user/business workflow that crosses the legacy boundary.
 3. Create a **characterization baseline** before edits: golden output fixture, contract test, snapshot with stable fields, or end-to-end smoke check. Record known nondeterministic fields and external dependencies; avoid capturing production PII.
 4. Build a tradeoff matrix for (A) keep and stabilize, (B) in-place upgrade, (C) extract behind an abstraction/adapter, (D) replace a vertical slice. Choose based on risk, team ownership, tested parity, and rollback, not trends.

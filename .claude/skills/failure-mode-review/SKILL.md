@@ -1,6 +1,6 @@
 ---
 name: failure-mode-review
-description: Review a code change by constructing concrete failure scenarios and invariants instead of generic style comments. Use before merging risky code, reviewing retries/payments/orders, or finding missing edge-case tests.
+description: Review a code change by constructing concrete failure scenarios and invariants instead of generic style comments. Use before merging risky code, reviewing retries/payments/orders, or finding missing edge-case tests. To prove or fix one specific reported bug, use autonomous-bug-hunter instead.
 license: MIT
 ---
 
